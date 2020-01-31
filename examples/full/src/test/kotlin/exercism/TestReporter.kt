@@ -14,38 +14,28 @@ import java.io.PrintStream
 
 class TestReporter : TestExecutionListener {
 
-    private val stdOut = ByteArrayOutputStream()
-    private val stdErr = ByteArrayOutputStream()
-
-    private val stdOutStream = PrintStream(stdOut)
-    private val stdErrStream = PrintStream(stdErr)
+    private val capture = OutputCapture()
 
     private val items = mutableListOf<TestItem>()
 
     private var testPlans = 0
 
-    override fun testPlanExecutionStarted(testPlan: TestPlan?) {
+    override fun testPlanExecutionStarted(testPlan: TestPlan) {
         testPlans++
     }
 
-    override fun testPlanExecutionFinished(testPlan: TestPlan?) {
+    override fun testPlanExecutionFinished(testPlan: TestPlan) {
         testPlans--
 
         if (testPlans == 0) {
-            File("build/out.txt").writeText(
-                items.joinToString("\n")
-            )
+            exportTestResults()
         }
     }
 
     override fun executionStarted(identifier: TestIdentifier) {
         if (!identifier.isTest) return
 
-        stdOut.reset()
-        stdErr.reset()
-
-        System.setOut(stdOutStream)
-        System.setErr(stdErrStream)
+        capture.startCapturing()
     }
 
     override fun executionFinished(identifier: TestIdentifier, result: TestExecutionResult) {
@@ -61,11 +51,19 @@ class TestReporter : TestExecutionListener {
     }
 
     private fun recordTestItem(identifier: TestIdentifier, result: ExecutionResult) {
+        val captureResult = capture.stopCapturing()
+
         items += TestItem(
             name = identifier.displayName.removeSuffix("()"),
             result = result,
-            stdOut = stdOut.toString().trim(),
-            stdErr = stdErr.toString().trim()
+            stdOut = captureResult.stdOut.trim(),
+            stdErr = captureResult.stdErr.trim()
+        )
+    }
+
+    private fun exportTestResults() {
+        File("build/out.txt").writeText(
+            items.joinToString("\n")
         )
     }
 }
@@ -84,4 +82,28 @@ fun TestExecutionResult.parseExecutionResult(): ExecutionResult = when (status!!
     SUCCESSFUL -> ExecutionResult.Successful
     FAILED -> ExecutionResult.Failed(throwable.orElse(null))
     ABORTED -> ExecutionResult.Aborted(throwable.orElse(null))
+}
+
+class OutputCapture {
+
+    private val stdOutBuffer = ByteArrayOutputStream()
+    private val stdErrBuffer = ByteArrayOutputStream()
+
+    private val stdOutStream = PrintStream(stdOutBuffer)
+    private val stdErrStream = PrintStream(stdErrBuffer)
+
+    fun startCapturing() {
+        stdOutBuffer.reset()
+        stdErrBuffer.reset()
+
+        System.setOut(stdOutStream)
+        System.setErr(stdErrStream)
+    }
+
+    fun stopCapturing(): CaptureResult = CaptureResult(
+        stdOut = stdOutBuffer.toString(),
+        stdErr = stdErrBuffer.toString()
+    )
+
+    data class CaptureResult(val stdOut: String, val stdErr: String)
 }
