@@ -14,7 +14,13 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.PrintStream
 
+private const val DEBUG = true
+
 class TestReporter : TestExecutionListener {
+
+    init {
+        if (DEBUG) println("Initializing ${TestReporter::class.java}")
+    }
 
     private val capture = OutputCapture()
 
