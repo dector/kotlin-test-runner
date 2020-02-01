@@ -1,5 +1,7 @@
 package exercism
 
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
 import exercism.TestItem.ExecutionResult
 import org.junit.platform.engine.TestExecutionResult
 import org.junit.platform.engine.TestExecutionResult.Status.ABORTED
@@ -62,9 +64,14 @@ class TestReporter : TestExecutionListener {
     }
 
     private fun exportTestResults() {
-        File("build/out.txt").writeText(
-            items.joinToString("\n")
-        )
+        val moshi = Moshi.Builder()
+            .build()
+
+        val json = moshi
+            .adapter<List<TestItem>>(Types.newParameterizedType(List::class.java, TestItem::class.java))
+            .toJson(items)
+
+        File("build/out.json").writeText(json)
     }
 }
 
