@@ -23,6 +23,7 @@ dependencies {
 
     implementation("com.squareup.moshi:moshi:${version.moshi}")
     implementation("com.squareup.moshi:moshi-kotlin:${version.moshi}")
+    implementation("com.squareup.moshi:moshi-adapters:${version.moshi}")
 
     implementation("org.junit.jupiter:junit-jupiter:5.5.2")
     implementation("org.junit.platform:junit-platform-launcher:1.6.0")
