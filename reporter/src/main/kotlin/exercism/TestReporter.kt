@@ -4,11 +4,7 @@ import com.squareup.moshi.FromJson
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
-import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
-import com.squareup.moshi.Types
-import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import exercism.TestItem.ExecutionResult
 import org.junit.platform.engine.TestExecutionResult
 import org.junit.platform.engine.TestExecutionResult.Status.ABORTED
@@ -47,7 +43,7 @@ class TestReporter : TestExecutionListener {
 
         if (testPlans == 0) {
             capture.resetCaptures()
-            exportTestResults()
+            exportTestPlanResults(testPlan.roots.first().displayName, items, File("build/"))
         }
     }
 
@@ -78,29 +74,6 @@ class TestReporter : TestExecutionListener {
             stdOut = captureResult.stdOut.trim(),
             stdErr = captureResult.stdErr.trim()
         )
-    }
-
-    private fun exportTestResults() {
-        val moshi = Moshi.Builder()
-            .add(PolymorphicJsonAdapterFactory.of(ExecutionResult::class.java, "__type")
-                .withSubtype(ExecutionResult.Successful::class.java, ExecutionResult.Successful::class.simpleName)
-                .withSubtype(ExecutionResult.Skipped::class.java, ExecutionResult.Skipped::class.simpleName)
-                .withSubtype(ExecutionResult.Aborted::class.java, ExecutionResult.Aborted::class.simpleName)
-                .withSubtype(ExecutionResult.Failed::class.java, ExecutionResult.Failed::class.simpleName)
-            )
-            .add(KotlinJsonAdapterFactory())
-            .add(ThrowableAdapter())
-            .build()
-
-        val json = moshi
-            .adapter<List<TestItem>>(Types.newParameterizedType(List::class.java, TestItem::class.java))
-            .indent("  ")
-            .toJson(items)
-
-        println("JSON:")
-        println(json)
-
-        File("build/out.json").writeText(json)
     }
 }
 
