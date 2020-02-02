@@ -11,7 +11,7 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib"))
 
-    testImplementation(files("libs/reporter.0.1.jar"))
+    testImplementation(files("../../reporter/build/libs/reporter.0.1.jar"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
 }
 

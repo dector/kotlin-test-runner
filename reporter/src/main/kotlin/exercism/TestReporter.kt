@@ -29,7 +29,10 @@ class TestReporter : TestExecutionListener {
         if (DEBUG) println("Initializing ${TestReporter::class.java}")
     }
 
-    private val capture = OutputCapture()
+    private val capture = MultiOutputCapture(
+        OutputCapture(System.out) { out -> System.setOut(out) },
+        OutputCapture(System.err) { out -> System.setErr(out) }
+    )
 
     private val items = mutableListOf<TestItem>()
 
@@ -129,34 +132,46 @@ fun TestExecutionResult.parseExecutionResult(): ExecutionResult = when (status!!
     ABORTED -> ExecutionResult.Aborted(throwable.orElse(null))
 }
 
-class OutputCapture {
-
-    private val prevOut = System.out
-    private val prevErr = System.err
-
-    private val stdOutBuffer = ByteArrayOutputStream()
-    private val stdErrBuffer = ByteArrayOutputStream()
-
-    private val stdOutStream = PrintStream(stdOutBuffer)
-    private val stdErrStream = PrintStream(stdErrBuffer)
+// FIXME capture for each thread
+class MultiOutputCapture(
+    private val stdOut: OutputCapture,
+    private val stdErr: OutputCapture
+) {
 
     fun startCapturing() {
-        stdOutBuffer.reset()
-        stdErrBuffer.reset()
-
-        System.setOut(stdOutStream)
-        System.setErr(stdErrStream)
+        stdOut.startCapturing()
+        stdErr.startCapturing()
     }
 
     fun stopCapturing(): CaptureResult = CaptureResult(
-        stdOut = stdOutBuffer.toString(),
-        stdErr = stdErrBuffer.toString()
+        stdOut = stdOut.stopCapturing(),
+        stdErr = stdErr.stopCapturing()
     )
 
     fun resetCaptures() {
-        System.setOut(prevOut)
-        System.setErr(prevErr)
+        stdOut.resetCaptures()
+        stdErr.resetCaptures()
     }
 
     data class CaptureResult(val stdOut: String, val stdErr: String)
+}
+
+class OutputCapture(
+    private val previousValue: PrintStream,
+    private val setter: (PrintStream) -> Unit
+) {
+    private val buffer = ByteArrayOutputStream()
+    private val newStream = PrintStream(buffer)
+
+    fun startCapturing() {
+        buffer.reset()
+        setter(newStream)
+    }
+
+    fun stopCapturing(): String =
+        buffer.toString()
+
+    fun resetCaptures() {
+        setter(previousValue)
+    }
 }
