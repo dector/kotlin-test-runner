@@ -77,6 +77,8 @@ class TestReporter : TestExecutionListener {
     }
 }
 
+data class TestSuit(val cases: List<TestItem>)
+
 data class TestItem(val name: String, val result: ExecutionResult, val stdOut: String, val stdErr: String) {
 
     sealed class ExecutionResult {
