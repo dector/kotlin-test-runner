@@ -6,7 +6,7 @@ RUN apk add --no-cache tar bash procps
 WORKDIR /home/builder
 
 # Download gradle (used by current auto-tester implementation)
-ARG GRADLE_DISTRIB_NAME="gradle-6.0.1"
+ARG GRADLE_DISTRIB_NAME="gradle-7.0"
 ARG GRADLE_DISTRIB_FILE="${GRADLE_DISTRIB_NAME}-bin.zip"
 ARG GRADLE_HOME="/home/gradle"
 
