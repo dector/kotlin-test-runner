@@ -1,7 +1,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
-    kotlin("jvm") version "1.3.60"
+    kotlin("jvm") version "1.5.0"
     id("com.github.johnrengelman.shadow") version "5.2.0"
     application
 }
@@ -16,8 +16,6 @@ dependencies {
     val version = object {
         val moshi = "1.9.2"
     }
-
-    implementation(kotlin("stdlib-jdk8"))
 
     implementation("com.xenomachina:kotlin-argparser:2.0.7")
 
