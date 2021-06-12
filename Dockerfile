@@ -13,6 +13,11 @@ COPY settings.gradle.kts ./
 RUN gradle --no-daemon -i shadowJar \
     && cp build/libs/autotest-runner.jar .
 
+# Warm-up cache
+COPY cache-warmup/ ./
+RUN cd cache-warmup \
+  && gradle --no-daemon resolveDependencies
+
 # === Build runtime image ===
 
 FROM gradle:6.8-jdk11
@@ -22,11 +27,17 @@ ARG WORKDIR="/opt/test-runner"
 COPY bin/run.sh ${WORKDIR}/run.sh
 COPY --from=build /home/builder/autotest-runner.jar ${WORKDIR}
 
+COPY --from=build /home/gradle/.gradle/ /home/gradle/.gradle/
+
 # Cache Kotlin dependencies
-#COPY cache-warmup/ /tmp/cache-warmup/
-#RUN cd /tmp/cache-warmup/ \
-#    && rm -r .gradle/ build/ \
-#    && gradle --no-daemon test
+# COPY cache-warmup/ /opt/cache-warmup/
+# RUN cd /opt/cache-warmup/ \
+#   && GRADLE_HOME=/opt/cache-warmup/.gradle gradle --console plain --no-daemon resolveDependencies \
+#   && cp -r .gradle/ /opt/test-runner/.gradle/
+
+# ENV GRADLE_HOME=/opt/test-runner/.gradle
+
+# RUN ls /opt/test-runner/.gradle
 
 WORKDIR $WORKDIR
 

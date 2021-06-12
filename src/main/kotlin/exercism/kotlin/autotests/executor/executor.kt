@@ -51,9 +51,13 @@ typealias ExitCode = Int
 private fun runGradleProcess(workingDir: File, logFile: File): ExitCode {
     val ioRedirect = run {
         logFile.delete()
+        logFile.createNewFile()
         ProcessBuilder.Redirect.appendTo(logFile)
     }
+
     val process = ProcessBuilder("gradle",
+        "--offline",
+        "--console=plain",
         "--no-daemon",
         "--warning-mode=none",
         "clean", "test"
